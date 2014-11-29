@@ -3,12 +3,12 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
 ENTITY ram_block IS
-   PORT (addra: IN std_logic_VECTOR(9 DOWNTO 0);
-         addrb: IN std_logic_VECTOR(9 DOWNTO 0);
+   PORT (addra: IN std_logic_VECTOR(9 DOWNTO 0); -- addressbus port a, selects memory cell for read/write
+         addrb: IN std_logic_VECTOR(9 DOWNTO 0); -- addressbus port b, selects memory cell for read/write
          clka:  IN std_logic;
          clkb:  IN std_logic;
-         douta: OUT std_logic_VECTOR(15 DOWNTO 0);
-         doutb: OUT std_logic_VECTOR(15 DOWNTO 0);
+         douta: OUT std_logic_VECTOR(15 DOWNTO 0); -- data out bus port a
+         doutb: OUT std_logic_VECTOR(15 DOWNTO 0); -- data out bus port b
          ena:   IN std_logic;
          enb:   IN std_logic);
 END ram_block;

@@ -44,7 +44,6 @@ xlnx_auto_0_xdb/
 *.mrp
 *.ngm
 *.xrpt
-*.txt
 *.prj
 
 transcript

@@ -2,7 +2,7 @@ LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 
 ENTITY accumulator IS
-    GENERIC(N: NATURAL := 8;
+    GENERIC(N: natural := 8;
             RSTDEF: std_logic := '0');
     PORT(rst:   IN std_logic;                           -- reset, RSTDEF active
          clk:   IN std_logic;                           -- clock, rising edge

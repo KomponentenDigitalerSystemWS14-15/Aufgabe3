@@ -44,7 +44,9 @@ BEGIN
         IF rst = RSTDEF THEN
             tmp_sum <= (OTHERS => '0');
         ELSIF rising_edge(clk) THEN
-            IF en = '1' THEN
+            IF swrst = RSTDEF THEN
+                tmp_sum <= (OTHERS => '0');
+            ELSIF en = '1' THEN
                 -- only apply new value when enabled
                 tmp_sum <= adder_sum;
                 cout <= adder_cout;

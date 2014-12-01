@@ -60,6 +60,9 @@ ARCHITECTURE behavioral OF core IS
     SIGNAL en_ram: std_logic := '0';
     SIGNAL en_acc: std_logic := '0';
     SIGNAL run: std_logic := '0';
+    
+    SIGNAL l_done: std_logic := '0';
+    SIGNAL swrst_acc: std_logic := '0';
 BEGIN
     addra <= "00" & addr_offset;
     addrb <= "01" & addr_offset;
@@ -79,7 +82,7 @@ BEGIN
              op2 => valb,
              prod => prod);
     
-    -- pad prod with zeros or ones
+    -- pad product with zeros or ones
     prod_padded <= std_logic_vector(resize(signed(prod), ACC_LEN));
     
     acc1: accumulator
@@ -87,50 +90,59 @@ BEGIN
                 RSTDEF => RSTDEF)
     PORT MAP(rst => rst,
              clk => clk,
-             swrst => swrst,
+             swrst => swrst_acc,
              en => en_acc,
              cin => '0',
              op => prod_padded,
              sum => res,
              cout => OPEN);
     
+    done <= l_done;
+    swrst_acc <= swrst WHEN swrst = RSTDEF ELSE swrst_acc;
+    
     PROCESS(rst, clk)
     BEGIN
         IF rst = RSTDEF THEN
-            done <= '0';
+            l_done <= '0';
             addr_offset <= (OTHERS => '0');
             en_acc <= '0';
             en_ram <= '0';
             run <= '0';
         ELSIF rising_edge(clk) THEN
             IF swrst = RSTDEF THEN
-                done <= '0';
+                l_done <= '0';
                 addr_offset <= (OTHERS => '0');
                 en_acc <= '0';
                 en_ram <= '0';
                 run <= '0';
             ELSE
-                done <= '0';
+                l_done <= '0';
+                swrst_acc <= NOT RSTDEF;
                 en_acc <= '0';
-                en_ram <= '0';
                 
                 IF run = '0' THEN
                     IF strt = '1' THEN
                         run <= '1';
-                        addr_offset <= sw - 1;
-                        en_ram <= '1';
+                        swrst_acc <= RSTDEF;
+                        IF sw /= "00000000" THEN
+                            addr_offset <= sw - 1;
+                            en_ram <= '1';
+                        END IF;
                     END IF;
                 ELSE
-                    IF en_ram = '0' THEN
-                        IF strt = '0' THEN
-                            run <= '0';
-                            done <= '1';
-                        END IF;
-                    ELSE
-                        IF addr_offset = "00000000" THEN
-                            en_ram <= '0';
+                    IF swrst_acc /= RSTDEF THEN
+                        IF en_ram = '1' THEN
+                            en_acc <= '1';
+                            IF addr_offset = "00000000" THEN
+                                en_ram <= '0';
+                            ELSE
+                                addr_offset <= addr_offset - 1;
+                            END IF;
                         ELSE
-                            addr_offset <= addr_offset - 1;
+                            IF strt = '0' THEN
+                                run <= '0';
+                                l_done <= '1';
+                            END IF;
                         END IF;
                     END IF;
                 END IF;

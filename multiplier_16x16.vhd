@@ -1,6 +1,8 @@
 LIBRARY ieee;
+LIBRARY unisim;
 USE ieee.std_logic_1164.ALL;
 USE ieee.numeric_std.ALL;
+USE unisim.vcomponents.ALL;
 
 ENTITY multiplier_16x16 IS
     PORT(op1:   IN std_logic_vector(15 DOWNTO 0);       -- 1. operand

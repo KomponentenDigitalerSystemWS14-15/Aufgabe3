@@ -26,11 +26,11 @@ ARCHITECTURE behavioral OF accumulator IS
     
     SIGNAL tmp_sum: std_logic_vector(N-1 DOWNTO 0) := (OTHERS => '0');
     SIGNAL adder_sum: std_logic_vector(N-1 DOWNTO 0) := (OTHERS => '0');
-    SIGNAL adder_cout: std_logic := 0;
+    SIGNAL adder_cout: std_logic := '0';
 BEGIN
 
     add1: full_adder_n
-    PORT GENERIC(N => N)
+    GENERIC MAP(N => N)
     PORT MAP(cin => cin,
              op1 => tmp_sum,
              op2 => op,

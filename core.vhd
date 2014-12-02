@@ -1,6 +1,5 @@
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
-USE ieee.std_logic_unsigned.ALL;
 USE ieee.numeric_std.ALL;
 
 ENTITY core IS
@@ -40,10 +39,8 @@ ARCHITECTURE behavioral OF core IS
          clk:   IN std_logic;                           -- clock, rising edge
          swrst: IN std_logic;                           -- software reset, RSTDEF active
          en:    IN std_logic;                           -- enable, high active
-         cin:   IN std_logic;                           -- carry input
          op:    IN std_logic_vector(N-1 DOWNTO 0);      -- operand
-         sum:   OUT std_logic_vector(N-1 DOWNTO 0);     -- result
-         cout:  OUT std_logic);
+         sum:   OUT std_logic_vector(N-1 DOWNTO 0));     -- result
     END COMPONENT;
     
     CONSTANT ACC_LEN: natural := 44;
@@ -61,7 +58,6 @@ ARCHITECTURE behavioral OF core IS
     SIGNAL en_acc: std_logic := '0';
     SIGNAL run: std_logic := '0';
     
-    SIGNAL l_done: std_logic := '0';
     SIGNAL swrst_acc: std_logic := '0';
 BEGIN
     addra <= "00" & addr_offset;
@@ -92,59 +88,57 @@ BEGIN
              clk => clk,
              swrst => swrst_acc,
              en => en_acc,
-             cin => '0',
              op => prod_padded,
-             sum => res,
-             cout => OPEN);
+             sum => res);
     
-    done <= l_done;
-    swrst_acc <= swrst WHEN swrst = RSTDEF ELSE swrst_acc;
+    swrst_acc <= swrst WHEN swrst = RSTDEF;
     
     PROCESS(rst, clk)
     BEGIN
         IF rst = RSTDEF THEN
-            l_done <= '0';
+            done <= '0';
             addr_offset <= (OTHERS => '0');
             en_acc <= '0';
             en_ram <= '0';
             run <= '0';
         ELSIF rising_edge(clk) THEN
             IF swrst = RSTDEF THEN
-                l_done <= '0';
+                done <= '0';
                 addr_offset <= (OTHERS => '0');
                 en_acc <= '0';
                 en_ram <= '0';
                 run <= '0';
             ELSE
-                l_done <= '0';
-                swrst_acc <= NOT RSTDEF;
-                en_acc <= '0';
+				done <= '1';
                 
                 IF run = '0' THEN
                     IF strt = '1' THEN
                         run <= '1';
+						done <= '0';
+						-- reset accumulator in first cycle, so it has 0 as value
                         swrst_acc <= RSTDEF;
                         IF sw /= "00000000" THEN
-                            addr_offset <= sw - 1;
+                            addr_offset <= std_logic_vector(unsigned(sw) - 1);
                             en_ram <= '1';
-                        END IF;
+                         END IF;
                     END IF;
                 ELSE
-                    IF swrst_acc /= RSTDEF THEN
-                        IF en_ram = '1' THEN
-                            en_acc <= '1';
-                            IF addr_offset = "00000000" THEN
-                                en_ram <= '0';
-                            ELSE
-                                addr_offset <= addr_offset - 1;
-                            END IF;
-                        ELSE
-                            IF strt = '0' THEN
-                                run <= '0';
-                                l_done <= '1';
-                            END IF;
-                        END IF;
-                    END IF;
+					swrst_acc <= NOT RSTDEF;
+					done <= '0';
+					-- en_acc is always 1 clock behind en_ram
+					en_acc <= en_ram;
+					
+					IF en_ram = '1' THEN
+						-- ram should be read until we reach address 0
+						IF addr_offset = "00000000" THEN
+							en_ram <= '0';
+						ELSE
+							addr_offset <= std_logic_vector(unsigned(addr_offset) - 1);
+						END IF;
+					ELSE
+						run <= strt;
+						done <= NOT strt;
+					END IF;
                 END IF;
             END IF;
         END IF;

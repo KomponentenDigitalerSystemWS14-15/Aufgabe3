@@ -59,6 +59,7 @@ ARCHITECTURE behavioral OF core IS
     SIGNAL run: std_logic := '0';
     
     SIGNAL swrst_acc: std_logic := '0';
+	SIGNAL swrst_acc_tmp: std_logic := '0';
 BEGIN
     addra <= "00" & addr_offset;
     addrb <= "01" & addr_offset;
@@ -91,7 +92,8 @@ BEGIN
              op => prod_padded,
              sum => res);
     
-    swrst_acc <= swrst WHEN swrst = RSTDEF;
+	-- swrst has higher priority than swrst_acc_tmp
+    swrst_acc <= swrst WHEN swrst = RSTDEF ELSE swrst_acc_tmp;
     
     PROCESS(rst, clk)
     BEGIN
@@ -116,14 +118,14 @@ BEGIN
                         run <= '1';
 						done <= '0';
 						-- reset accumulator in first cycle, so it has 0 as value
-                        swrst_acc <= RSTDEF;
+                        swrst_acc_tmp <= RSTDEF;
                         IF sw /= "00000000" THEN
                             addr_offset <= std_logic_vector(unsigned(sw) - 1);
                             en_ram <= '1';
                          END IF;
                     END IF;
                 ELSE
-					swrst_acc <= NOT RSTDEF;
+					swrst_acc_tmp <= NOT RSTDEF;
 					done <= '0';
 					-- en_acc is always 1 clock behind en_ram
 					en_acc <= en_ram;

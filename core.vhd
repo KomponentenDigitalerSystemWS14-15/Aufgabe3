@@ -27,7 +27,10 @@ ARCHITECTURE behavioral OF core IS
     END COMPONENT;
     
     COMPONENT multiplier_16x16 IS
-    PORT(op1:   IN std_logic_vector(15 DOWNTO 0);       -- 1. operand
+    PORT(clk: 	IN std_logic;							-- clock rising edge
+		 clken: IN std_logic;							-- clock enable, high active
+		 swrst:	IN std_logic;							-- software reset, high active
+		 op1:   IN std_logic_vector(15 DOWNTO 0);       -- 1. operand
          op2:   IN std_logic_vector(15 DOWNTO 0);       -- 2. operand
          prod:  OUT std_logic_vector(35 DOWNTO 0));     -- resulting product
     END COMPONENT;
@@ -44,7 +47,7 @@ ARCHITECTURE behavioral OF core IS
     END COMPONENT;
     
     CONSTANT ACC_LEN: natural := 44;
-    
+	
     SIGNAL vala: std_logic_vector(15 DOWNTO 0);
     SIGNAL valb: std_logic_vector(15 DOWNTO 0);
     SIGNAL prod: std_logic_vector(35 DOWNTO 0);
@@ -55,6 +58,7 @@ ARCHITECTURE behavioral OF core IS
     SIGNAL addrb: std_logic_vector(9 DOWNTO 0);
     
     SIGNAL en_ram: std_logic := '0';
+	SIGNAL en_mul: std_logic := '0';
     SIGNAL en_acc: std_logic := '0';
     SIGNAL run: std_logic := '0';
     
@@ -75,7 +79,10 @@ BEGIN
              enb => en_ram);
              
     mul1: multiplier_16x16
-    PORT MAP(op1 => vala,
+    PORT MAP(clk => clk,
+			 clken => '1',
+			 swrst => '0',
+			 op1 => vala,
              op2 => valb,
              prod => prod);
     
@@ -101,6 +108,7 @@ BEGIN
             done <= '0';
             addr_offset <= (OTHERS => '0');
             en_acc <= '0';
+			en_mul <= '0';
             en_ram <= '0';
             run <= '0';
         ELSIF rising_edge(clk) THEN
@@ -108,27 +116,26 @@ BEGIN
                 done <= '0';
                 addr_offset <= (OTHERS => '0');
                 en_acc <= '0';
+				en_mul <= '0';
                 en_ram <= '0';
                 run <= '0';
             ELSE
-				done <= '1';
-                
-                IF run = '0' THEN
-                    IF strt = '1' THEN
-                        run <= '1';
+				IF run = '0' THEN
+					done <= '1';
+					IF strt = '1' THEN
+						run <= '1';
 						done <= '0';
-						-- reset accumulator in first cycle, so it has 0 as value
-                        swrst_acc_tmp <= RSTDEF;
-                        IF sw /= "00000000" THEN
-                            addr_offset <= std_logic_vector(unsigned(sw) - 1);
-                            en_ram <= '1';
-                         END IF;
-                    END IF;
-                ELSE
+						swrst_acc_tmp <= RSTDEF;
+						
+						IF sw /= "00000000" THEN
+							addr_offset <= std_logic_vector(unsigned(sw) - 1);
+							en_ram <= '1';
+						END IF;
+					END IF;
+				ELSE
 					swrst_acc_tmp <= NOT RSTDEF;
-					done <= '0';
-					-- en_acc is always 1 clock behind en_ram
-					en_acc <= en_ram;
+					en_mul <= en_ram;
+					en_acc <= en_mul;
 					
 					IF en_ram = '1' THEN
 						-- ram should be read until we reach address 0
@@ -137,13 +144,13 @@ BEGIN
 						ELSE
 							addr_offset <= std_logic_vector(unsigned(addr_offset) - 1);
 						END IF;
-					ELSE
+					ELSIF en_acc = '0' THEN
 						run <= strt;
 						done <= NOT strt;
 					END IF;
-                END IF;
-            END IF;
-        END IF;
+				END IF;
+			END IF;
+		END IF;
     END PROCESS;
 
 END behavioral;

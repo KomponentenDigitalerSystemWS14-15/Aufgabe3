@@ -123,13 +123,13 @@ BEGIN
                 IF run = '0' THEN
                     done <= '1';
                     IF strt = '1' THEN
-                        run <= '1';
                         done <= '0';
                         swrst_acc_tmp <= RSTDEF;
                         
                         IF sw /= "00000000" THEN
                             addr_offset <= std_logic_vector(unsigned(sw) - 1);
                             en_ram <= '1';
+                            run <= '1';
                         END IF;
                     END IF;
                 ELSE

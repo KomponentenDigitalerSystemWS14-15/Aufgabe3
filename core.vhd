@@ -119,16 +119,19 @@ BEGIN
                 en_mul <= '0';
                 en_ram <= '0';
                 run <= '0';
-            ELSE
+            ELSE         
                 IF run = '0' THEN
                     IF strt = '1' THEN
                         run <= '1';
                         done <= '0';
                         swrst_acc_tmp <= RSTDEF;
-                                              
+                        
                         IF sw /= "00000000" THEN
                             addr_offset <= std_logic_vector(unsigned(sw) - 1);
                             en_ram <= '1';
+                        ELSE
+                            run <= '0';
+                            done <= '1';
                         END IF;
                     END IF;
                 ELSE
@@ -136,14 +139,14 @@ BEGIN
                     en_mul <= en_ram;
                     en_acc <= en_mul;
                     
-                    IF en_ram = '1' THEN
-                        -- ram should be read until we reach address 0
-                        IF addr_offset = "00000000" THEN
+                    addr_offset <= std_logic_vector(unsigned(addr_offset) - 1);
+                    
+                    IF addr_offset = "00000000" THEN
                             en_ram <= '0';
-                        ELSE
-                            addr_offset <= std_logic_vector(unsigned(addr_offset) - 1);
-                        END IF;
-                    ELSIF en_mul = '0' THEN 
+                            -- 2 cycles until end from now
+                    END IF;
+
+                    IF en_ram = '0' AND en_mul = '0' THEN 
                         run <= '0';
                         done <= '1';
                     END IF;
@@ -151,5 +154,8 @@ BEGIN
             END IF;
         END IF;
     END PROCESS;
+    
+    --run <= run_tmp(2);
+    --done <= not run;
 
 END behavioral;

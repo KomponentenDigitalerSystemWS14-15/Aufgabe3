@@ -121,15 +121,14 @@ BEGIN
                 run <= '0';
             ELSE
                 IF run = '0' THEN
-                    done <= '1';
                     IF strt = '1' THEN
+                        run <= '1';
                         done <= '0';
                         swrst_acc_tmp <= RSTDEF;
-                        
+                                              
                         IF sw /= "00000000" THEN
                             addr_offset <= std_logic_vector(unsigned(sw) - 1);
                             en_ram <= '1';
-                            run <= '1';
                         END IF;
                     END IF;
                 ELSE
@@ -144,9 +143,9 @@ BEGIN
                         ELSE
                             addr_offset <= std_logic_vector(unsigned(addr_offset) - 1);
                         END IF;
-                    ELSIF en_acc = '0' AND en_mul = '0' THEN
-                        run <= '0';--strt;
-                        done <= '1';--NOT strt;
+                    ELSIF en_mul = '0' THEN 
+                        run <= '0';
+                        done <= '1';
                     END IF;
                 END IF;
             END IF;

@@ -46,6 +46,15 @@ ARCHITECTURE behavioral OF core IS
          sum:   OUT std_logic_vector(N-1 DOWNTO 0));    -- result
     END COMPONENT;
     
+    COMPONENT Accumulator_xilinx IS
+      PORT(
+            b : IN STD_LOGIC_VECTOR(43 DOWNTO 0);
+            clk : IN STD_LOGIC;
+            ce : IN STD_LOGIC;
+            sclr : IN STD_LOGIC;
+            q : OUT STD_LOGIC_VECTOR(43 DOWNTO 0));
+    END COMPONENT;
+    
     CONSTANT ACC_LEN: natural := 44;
     
     SIGNAL vala: std_logic_vector(15 DOWNTO 0);
@@ -89,6 +98,13 @@ BEGIN
     -- pad product with zeros or ones
     prod_padded <= std_logic_vector(resize(signed(prod), ACC_LEN));
     
+    --acc1: Accumulator_xilinx
+    --PORT MAP(b => prod_padded,
+    --         clk => clk,
+    --         ce => en_acc,
+    --         sclr => swrst,
+    --         q => res);
+    
     acc1: accumulator
     GENERIC MAP(N => ACC_LEN,
                 RSTDEF => RSTDEF)
@@ -119,7 +135,8 @@ BEGIN
                 en_mul <= '0';
                 en_ram <= '0';
                 run <= '0';
-            ELSE         
+            ELSE
+                swrst_acc_tmp <= NOT RSTDEF;
                 IF run = '0' THEN
                     IF strt = '1' THEN
                         run <= '1';
@@ -135,7 +152,6 @@ BEGIN
                         END IF;
                     END IF;
                 ELSE
-                    swrst_acc_tmp <= NOT RSTDEF;
                     en_mul <= en_ram;
                     en_acc <= en_mul;
                     
@@ -154,8 +170,5 @@ BEGIN
             END IF;
         END IF;
     END PROCESS;
-    
-    --run <= run_tmp(2);
-    --done <= not run;
 
 END behavioral;

@@ -102,7 +102,7 @@ BEGIN
     --PORT MAP(b => prod_padded,
     --         clk => clk,
     --         ce => en_acc,
-    --         sclr => swrst,
+    --        sclr => swrst,
     --         q => res);
     
     acc1: accumulator

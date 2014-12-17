@@ -37,18 +37,19 @@ ARCHITECTURE behavioral OF core IS
     
     COMPONENT accumulator IS
     GENERIC(N: natural;
+            N_in: natural;
             RSTDEF: std_logic);
     PORT(rst:   IN std_logic;                           -- reset, RSTDEF active
          clk:   IN std_logic;                           -- clock, rising edge
          swrst: IN std_logic;                           -- software reset, RSTDEF active
          en:    IN std_logic;                           -- enable, high active
-         op:    IN std_logic_vector(N-1 DOWNTO 0);      -- operand
+         op:    IN std_logic_vector(N_in-1 DOWNTO 0);      -- operand
          sum:   OUT std_logic_vector(N-1 DOWNTO 0));    -- result
     END COMPONENT;
     
     COMPONENT Accumulator_xilinx IS
       PORT(
-            b : IN STD_LOGIC_VECTOR(43 DOWNTO 0);
+            b : IN STD_LOGIC_VECTOR(35 DOWNTO 0);
             clk : IN STD_LOGIC;
             ce : IN STD_LOGIC;
             sclr : IN STD_LOGIC;
@@ -56,11 +57,11 @@ ARCHITECTURE behavioral OF core IS
     END COMPONENT;
     
     CONSTANT ACC_LEN: natural := 44;
+    CONSTANT ACC_IN_LEN: natural := 36;
     
     SIGNAL vala: std_logic_vector(15 DOWNTO 0);
     SIGNAL valb: std_logic_vector(15 DOWNTO 0);
     SIGNAL prod: std_logic_vector(35 DOWNTO 0);
-    SIGNAL prod_padded: std_logic_vector(ACC_LEN-1 DOWNTO 0);
     
     SIGNAL addr_offset: std_logic_vector(7 DOWNTO 0);
     SIGNAL addra: std_logic_vector(9 DOWNTO 0);
@@ -95,24 +96,22 @@ BEGIN
              op2 => valb,
              prod => prod);
     
-    -- pad product with zeros or ones
-    prod_padded <= std_logic_vector(resize(signed(prod), ACC_LEN));
-    
     --acc1: Accumulator_xilinx
-    --PORT MAP(b => prod_padded,
+    --PORT MAP(b => prod,--_padded,
     --         clk => clk,
     --         ce => en_acc,
-    --        sclr => swrst,
+    --         sclr => swrst_acc,
     --         q => res);
     
     acc1: accumulator
     GENERIC MAP(N => ACC_LEN,
+                N_in => ACC_IN_LEN,
                 RSTDEF => RSTDEF)
     PORT MAP(rst => rst,
              clk => clk,
              swrst => swrst_acc,
              en => en_acc,
-             op => prod_padded,
+             op => prod,--_padded,
              sum => res);
     
     -- swrst has higher priority than swrst_acc_tmp

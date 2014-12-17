@@ -4,12 +4,13 @@ USE ieee.numeric_std.ALL;
 
 ENTITY accumulator IS
     GENERIC(N: natural := 8;
+            N_in: natural := 8;
             RSTDEF: std_logic := '0');
     PORT(rst:   IN std_logic;                           -- reset, RSTDEF active
          clk:   IN std_logic;                           -- clock, rising edge
          swrst: IN std_logic;                           -- software reset, RSTDEF active
          en:    IN std_logic;                           -- enable, high active
-         op:    IN std_logic_vector(N-1 DOWNTO 0);      			-- operand
+         op:    IN std_logic_vector(N_in-1 DOWNTO 0);      			-- operand
          sum:   OUT std_logic_vector(N-1 DOWNTO 0));     			-- result
 END accumulator;
 

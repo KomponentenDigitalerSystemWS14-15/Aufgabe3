@@ -96,23 +96,23 @@ BEGIN
              op2 => valb,
              prod => prod);
     
-    --acc1: Accumulator_xilinx
-    --PORT MAP(b => prod,--_padded,
-    --         clk => clk,
-    --         ce => en_acc,
-    --         sclr => swrst_acc,
-    --         q => res);
-    
-    acc1: accumulator
-    GENERIC MAP(N => ACC_LEN,
-                N_in => ACC_IN_LEN,
-                RSTDEF => RSTDEF)
-    PORT MAP(rst => rst,
+    acc1: Accumulator_xilinx
+    PORT MAP(b => prod,
              clk => clk,
-             swrst => swrst_acc,
-             en => en_acc,
-             op => prod,--_padded,
-             sum => res);
+             ce => en_acc,
+             sclr => swrst_acc,
+             q => res);
+    
+    --acc1: accumulator
+    --GENERIC MAP(N => ACC_LEN,
+    --            N_in => ACC_IN_LEN,
+    --            RSTDEF => RSTDEF)
+    --PORT MAP(rst => rst,
+    --         clk => clk,
+    --        swrst => swrst_acc,
+    --         en => en_acc,
+    --         op => prod,
+    --         sum => res);
     
     -- swrst has higher priority than swrst_acc_tmp
     swrst_acc <= swrst WHEN swrst = RSTDEF ELSE swrst_acc_tmp;
@@ -126,6 +126,7 @@ BEGIN
             en_mul <= '0';
             en_ram <= '0';
             run <= '0';
+            swrst_acc_tmp <= RSTDEF;
         ELSIF rising_edge(clk) THEN
             IF swrst = RSTDEF THEN
                 done <= '0';
